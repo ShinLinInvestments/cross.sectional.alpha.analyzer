@@ -1,6 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(memoise)
+library(futile.logger)
 
 Sys.setlocale("LC_TIME","English")
 setwd("H:/Goldhedge/Career/Opportunities/QuantFin/Coatue/")
@@ -70,10 +71,23 @@ utils.add.bday <- function(d, days){
 	return(all.trading.dates[tgtidx])
 }
 
+utils.read <- function(filepath, startDate = NA, endDate = NA){
+	path = ifelse(grep(filepath, pattern = '/'), dirname(filepath), './')
+	filename = basename(filepath)
+	all.files = list.files(path = path, pattern = filename, include.dirs = FALSE)
+	if(!is.na(startDate) && !is.na(endDate)){
+		
+	}
+}
+
 sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
 sdNA <- function(...) sd(..., na.rm = TRUE)
 
+# Logger setting
+flog.layout(layout.format('[~l] [~t] [~n.~f] ~m'))
+
+# Source data preparation
 if(!exists('company.data')){
 	company.data = data.table(read.csv("source.data/company_data.csv", stringsAsFactors = FALSE))[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
 }
