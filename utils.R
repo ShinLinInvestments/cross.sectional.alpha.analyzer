@@ -8,6 +8,7 @@ setwd("H:/Goldhedge/Career/Opportunities/QuantFin/Coatue/")
 
 utils.checkCond <- function(cond, err.message){
 	if(all(cond)) return()
+	flog.fatal(err.message)
 	stop(err.message)
 }
 
@@ -72,12 +73,18 @@ utils.add.bday <- function(d, days){
 }
 
 utils.read <- function(filepath, startDate = NA, endDate = NA){
-	path = ifelse(grep(filepath, pattern = '/'), dirname(filepath), './')
+	path = paste('./', dirname(filepath), sep='')
 	filename = basename(filepath)
-	all.files = list.files(path = path, pattern = filename, include.dirs = FALSE)
+	all.files = list.files(path = path, pattern = filename, full.names = TRUE)
+	all.files.dt = data.table(fullname = all.files, curname = basename(all.files))
+	flog.info(paste("Found", length(all.files), "files under path =", path, "prefix =", filename))
 	if(!is.na(startDate) && !is.na(endDate)){
-		
+		utils.checkCond(as.Date(startDate) <= as.Date(endDate), paste(startDate, "is larger than", endDate))
+		all.files.dt[, ymd := gsub('.*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*', '\\1', curname)]
+		all.files.dt = all.files.dt[(ymd >= startDate) & (ymd <= endDate),]
+		flog.info(paste("Found", nrow(all.files.dt), "files between", startDate, "and", endDate, "under path =", path, "prefix =", filename))
 	}
+	rbindlist(lapply(all.files.dt[,fullname], fread))
 }
 
 sumNA <- function(...) sum(..., na.rm = TRUE)
@@ -85,20 +92,20 @@ meanNA <- function(...) mean(..., na.rm = TRUE)
 sdNA <- function(...) sd(..., na.rm = TRUE)
 
 # Logger setting
-flog.layout(layout.format('[~l] [~t] [~n.~f] ~m'))
+flog.layout(layout.format('~t|~l|~n|~f|~m'))
 
 # Source data preparation
 if(!exists('company.data')){
-	company.data = data.table(read.csv("source.data/company_data.csv", stringsAsFactors = FALSE))[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
+	company.data = fread("source.data/company_data.csv", stringsAsFactors = FALSE)[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
 }
 if(!exists('financial.data')){
-	financial.data = data.table(read.csv("source.data/financial_data.csv", stringsAsFactors = FALSE))
+	financial.data = fread("source.data/financial_data.csv", stringsAsFactors = FALSE)
 }
 if(!exists('indice.data')){
-	indice.data = data.table(read.csv("source.data/indice_data.csv", stringsAsFactors = FALSE))
+	indice.data = fread("source.data/indice_data.csv", stringsAsFactors = FALSE)
 }
 if(!exists('market.data')){
-	market.data = data.table(read.csv("source.data/market_data.csv", stringsAsFactors = FALSE))
+	market.data = fread("source.data/market_data.csv", stringsAsFactors = FALSE)
 }
 
 all.trading.dates = utils.gen.bdays()

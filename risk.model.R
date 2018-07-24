@@ -7,7 +7,7 @@ gen.size.loading <- function(market.data, halflife = 42, lookback = 504, startDa
 	rbindlist( lapply( all.dates, function(d){
 		market.cap.cur = market.caps[Date <= d][utils.add.bday(d, -lookback) <= Date][!is.na(Market.Cap)]
 		cur.lookback.dates = market.cap.cur[, sort(unique(Date))]
-		print(paste("size loading generating for", d, "with", length(cur.lookback.dates), "dates"))
+		flog.info(paste("size loading generating for", d, "with", length(cur.lookback.dates), "dates"))
 		bday.diff.map = data.table(Date=cur.lookback.dates, date.diff=utils.diff.bday(cur.lookback.dates, d))
 		market.cap.cur = merge(market.cap.cur, bday.diff.map, by=c('Date'), all=T)
 		market.cap.cur[, ewma := 0.5 ^ (date.diff / halflife)]
