@@ -87,6 +87,14 @@ utils.read <- function(filepath, startDate = NA, endDate = NA){
 	rbindlist(lapply(all.files.dt[,fullname], fread))
 }
 
+utils.winsorize <- function(vec, lowerBound = -Inf, upperBound = Inf, use.pct = TRUE){
+	if(use.pct){
+		lowerBound = quantile(vec, max(lowerBound, 0))
+		upperBound = quantile(vec, min(upperBound, 1))
+	}
+	pmin(upperBound, pmax(lowerBound, vec))
+}
+
 sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
 sdNA <- function(...) sd(..., na.rm = TRUE)
@@ -97,17 +105,20 @@ flog.layout(layout.format('~t|~l|~n|~f|~m'))
 # Source data preparation
 if(!exists('company.data')){
 	company.data = fread("source.data/company_data.csv", stringsAsFactors = FALSE)
-	colnames(company.data) = gsub(' ','',colnames(company.data))
-	company.data = company.data[,.(Ticker, Sector=DivisionSIC, Industry=MajorSIC)]
+	colnames(company.data) = gsub(' ','.',colnames(company.data))
+	company.data = company.data[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
 }
 if(!exists('financial.data')){
 	financial.data = fread("source.data/financial_data.csv", stringsAsFactors = FALSE)
+	colnames(financial.data) = gsub(' ','.',colnames(financial.data))
 }
 if(!exists('indice.data')){
 	indice.data = fread("source.data/indice_data.csv", stringsAsFactors = FALSE)
+	colnames(indice.data) = gsub(' ','.',colnames(indice.data))
 }
 if(!exists('market.data')){
 	market.data = fread("source.data/market_data.csv", stringsAsFactors = FALSE)
+	colnames(market.data) = gsub(' ','.',colnames(market.data))
 }
 
 all.trading.dates = utils.gen.bdays()
