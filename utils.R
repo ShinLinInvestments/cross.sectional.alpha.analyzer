@@ -96,7 +96,9 @@ flog.layout(layout.format('~t|~l|~n|~f|~m'))
 
 # Source data preparation
 if(!exists('company.data')){
-	company.data = fread("source.data/company_data.csv", stringsAsFactors = FALSE)[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
+	company.data = fread("source.data/company_data.csv", stringsAsFactors = FALSE)
+	colnames(company.data) = gsub(' ','',colnames(company.data))
+	company.data = company.data[,.(Ticker, Sector=DivisionSIC, Industry=MajorSIC)]
 }
 if(!exists('financial.data')){
 	financial.data = fread("source.data/financial_data.csv", stringsAsFactors = FALSE)
