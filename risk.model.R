@@ -26,3 +26,33 @@ gen.size.loading(market.data[Date < "2018-01-01"][Date >= "2013-12-01"], startDa
 #gen.size.loading(market.data[Date < "2008-01-01"][Date >= "2003-12-01"], startDate = "2006-01-01")
 #gen.size.loading(market.data[Date < "2006-01-01"][Date >= "2001-12-01"], startDate = "2004-01-01")
 
+gen.mktbeta.loading <- function(market.data, indice.data, halflife = 63, lookback = 504, trim.pct = 1/21, startDate = "1999-01-01"){
+	rets = market.data[,.(Date, Ticker, tret = Total.Return)]
+	all.dates = sort(intersect(rets[, unique(Date)], indice.data[,unique(Date)]))
+	all.dates = all.dates[which(all.dates >= startDate)]
+	lapply( all.dates, function(d){
+		rets.cur = rets[Date <= d][utils.add.bday(d, -lookback) <= Date][!is.na(tret)]
+		idxs.cur = indice.data[Index == "SPY"][Date <= d][utils.add.bday(d, -lookback) <= Date][!is.na(Return)]
+		idxs.cur = idxs.cur[, .(iret = mean(Return)), by=Date][order(Date)][, date.diff := ((nrow(idxs.cur)-1):0) / halflife]
+		cur.lookback.dates = sort(intersect(rets.cur[, unique(Date)], idxs.cur[, unique(Date)]))
+		secs = rets.cur[, sort(unique(Ticker))]
+		flog.info(paste("mktbeta loading generating for", d, "with", length(cur.lookback.dates), "dates", length(secs), "securities"))
+		res = rbindlist( lapply( secs, function(s){
+			rets.sec = merge(rets.cur[Ticker == s], idxs.cur, by=c('Date'))[(!is.na(iret)) & (!is.na(tret))]
+			if(nrow(rets.sec) <= 5) return(NULL)
+			rets.sec[, `:=`(iret.wnsr = utils.winsorize(iret, trim.pct, 1 - trim.pct), tret.wnsr = utils.winsorize(tret, trim.pct/2, 1 - trim.pct/2))]
+			data.table(Ticker = s, beta = rets.sec[, lm(tret.wnsr ~ 0 + iret.wnsr, weights = 0.5 ^ date.diff)]$coefficients[1])
+		} ) )
+		res[, MKTBETA := (beta - meanNA(beta)) / sdNA(beta)]
+		write.csv(res, paste("risk.loading/MKTBETA/MKTBETA.", d, '.csv', sep=''), quote = F, row.names = F)
+		NULL
+	} )
+}
+
+gen.mktbeta.loading(market.data[Date < "2018-01-01"][Date >= "2013-12-01"], indice.data, startDate = "2016-01-01")
+#gen.mktbeta.loading(market.data[Date < "2016-01-01"][Date >= "2011-12-01"], indice.data, startDate = "2014-01-01")
+#gen.mktbeta.loading(market.data[Date < "2014-01-01"][Date >= "2009-12-01"], indice.data, startDate = "2012-01-01")
+#gen.mktbeta.loading(market.data[Date < "2012-01-01"][Date >= "2007-12-01"], indice.data, startDate = "2010-01-01")
+#gen.mktbeta.loading(market.data[Date < "2010-01-01"][Date >= "2005-12-01"], indice.data, startDate = "2008-01-01")
+#gen.mktbeta.loading(market.data[Date < "2008-01-01"][Date >= "2003-12-01"], indice.data, startDate = "2006-01-01")
+#gen.mktbeta.loading(market.data[Date < "2006-01-01"][Date >= "2001-12-01"], indice.data, startDate = "2004-02-01")
