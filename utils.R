@@ -106,11 +106,11 @@ flog.layout(layout.format('~t|~l|~n|~f|~m'))
 if(!exists('company.data')){
 	company.data = fread("source.data/company_data.csv", stringsAsFactors = FALSE)
 	colnames(company.data) = gsub(' ','.',colnames(company.data))
-	company.data = company.data[,.(Ticker, Sector=Division.SIC, Industry=Major.SIC)]
+	company.data[, Sector := gsub('[, ]+(AND)*[, ]*', '.', Division.SIC)][, Industry := gsub('&','AND',gsub('[;, -]+', '.', Major.SIC))]
 }
 if(!exists('financial.data')){
 	financial.data = fread("source.data/financial_data.csv", stringsAsFactors = FALSE)
-	colnames(financial.data) = gsub(' ','.',colnames(financial.data))
+	colnames(financial.data) = gsub('[ ,]+','.',colnames(financial.data))
 }
 if(!exists('indice.data')){
 	indice.data = fread("source.data/indice_data.csv", stringsAsFactors = FALSE)

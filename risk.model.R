@@ -56,3 +56,10 @@ gen.mktbeta.loading(market.data[Date < "2018-01-01"][Date >= "2013-12-01"], indi
 #gen.mktbeta.loading(market.data[Date < "2010-01-01"][Date >= "2005-12-01"], indice.data, startDate = "2008-01-01")
 #gen.mktbeta.loading(market.data[Date < "2008-01-01"][Date >= "2003-12-01"], indice.data, startDate = "2006-01-01")
 #gen.mktbeta.loading(market.data[Date < "2006-01-01"][Date >= "2001-12-01"], indice.data, startDate = "2004-02-01")
+
+gen.industry.loading <- function(company.data){
+	classified.companies = company.data[Sector != "NONCLASSIFIABLE",.(Ticker, Industry, Wgt=1)]
+	industry.model = dcast(classified.companies, Ticker~Industry, fun.aggregate = sum, value.var = "Wgt")
+}
+
+
