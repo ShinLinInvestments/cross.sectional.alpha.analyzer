@@ -13,9 +13,10 @@ utils.checkCond <- function(cond, err.message){
 }
 
 utils.gen.bdays <- function(){
-	all.trading.dates = seq(as.Date("2000-01-01"), Sys.Date(), by="1 day")
+	all.trading.dates = seq(as.Date("1998-01-01"), Sys.Date(), by="1 day")
 	all.trading.dates = all.trading.dates[!as.POSIXlt(all.trading.dates)$wday %in% c(0,6,7)]
 	nyse.holidays = as.Date(c(
+		'1998-01-01','1998-01-19','1998-02-16','1998-04-10','1998-05-25','1998-07-03','1998-09-07','1998-11-26','1998-12-25',
 		'1999-01-01','1999-01-18','1999-02-15','1999-04-02','1999-05-31','1999-07-05','1999-09-06','1999-11-25','1999-12-24',
 					 '2000-01-17','2000-02-21','2000-04-21','2000-05-29','2000-07-04','2000-09-04','2000-11-23','2000-12-25',
 		'2001-01-01','2001-01-15','2001-02-19','2001-04-13','2001-05-28','2001-07-04','2001-09-03','2001-09-11','2001-09-12','2001-09-13','2001-09-14','2001-11-22','2001-12-25',
@@ -86,6 +87,9 @@ utils.read <- function(filepath, startDate = NA, endDate = NA){
 	}
 	rbindlist(lapply(all.files.dt[,fullname], fread))
 }
+
+utils.merge <- function(dt1, dt2, ...) merge(dt1, dt2, by = intersect(colnames(dt1), colnames(dt2)), ...)
+utils.merge.all <- function(dt1, dt2, ...) utils.merge(dt1, dt2, all=T)
 
 utils.winsorize <- function(vec, lowerBound = -Inf, upperBound = Inf, use.pct = TRUE){
 	if(use.pct){
