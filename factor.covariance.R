@@ -111,23 +111,21 @@ gen.factor.spec.return.on.date <- function(ymd, market.data){
 	det.denominator = det(denominator)
 	utils.checkCond(!is.na(det.denominator) & det.denominator != 0, "denominator is not invertible")
 	fret.mat = solve(denominator) %*% t(expos.mat) %*% gls.wgts.mat %*% rets.mat
-	fret.dt = data.table(Factor = rownames(fret.mat), fret = fret.mat[,1])
+	fret.dt = data.table(Date = ymd, Factor = rownames(fret.mat), fret = fret.mat[,1])
 	write.csv(fret.dt[order(Factor)], paste("risk.model/factor.return/factor.return.", ymd, ".csv"), quote = F, row.names = F)
 	flog.info(paste("fret on", ymd, "mean =", round(fret.dt[,meanNA(fret)*100], 6), "% dispersion =", round(fret.dt[,sdNA(fret)*100], 6), "%"))
 	# Spec return
 	sret.mat = rets.mat - expos.mat %*% fret.mat
-	sret.dt = utils.merge.all(rets, data.table(Ticker = rownames(sret.mat), sret = sret.mat[,1]))
+	sret.dt = data.table(Date = ymd, utils.merge.all(rets, data.table(Ticker = rownames(sret.mat), sret = sret.mat[,1])))
 	write.csv(sret.dt[order(Ticker)], paste("risk.model/spec.return/spec.return.", ymd, ".csv"), quote = F, row.names = F)
 	flog.info(paste("sret on", ymd, "mean =", round(sret.dt[,meanNA(sret)*100], 6), "% dispersion =", round(sret.dt[,sdNA(sret)*100], 6), "%"))
 }
 
-startDate = '2006-01-01'; endDate = '2008-01-01'
+startDate = '2004-02-03'; endDate = '2006-01-01'
 lapply(all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))], gen.factor.spec.return.on.date, market.data = market.data[Date<=endDate][Date>=startDate])
 
 gen.factor.covariance.matrix.on.date <- function(startDate, endDate, lookback = 504, halflife = 90, shrink.wgt = 0.8){
-	frets = rbindlist(lapply(utils.get.bday.range(utils.add.bday(startDate, -lookback), endDate), function(d){
-		data.table(Date = d, utils.read("risk.model/factor.return/factor.return.", d, d))
-	}))
+	frets = utils.read("risk.model/factor.return/factor.return.", utils.add.bday(startDate, -lookback), endDate)
 	lapply(utils.get.bday.range(startDate, endDate), function(d){
 		dates.lb = utils.get.bday.range(utils.add.bday(d, -lookback), d)
 		frets.cur = utils.merge(frets[(Date >= min(dates.lb)) & (Date <= max(dates.lb)),], data.table(Date=dates.lb, date.diff=utils.diff.bday(dates.lb, d)), all.y=T)
@@ -144,6 +142,6 @@ gen.factor.covariance.matrix.on.date <- function(startDate, endDate, lookback = 
 	})
 }
 
-gen.factor.covariance.matrix.on.date('2014-01-01','2018-01-01')
+gen.factor.covariance.matrix.on.date('2014-01-01','2014-02-01')
 gen.factor.covariance.matrix.on.date('2010-01-01','2014-01-01')
 gen.factor.covariance.matrix.on.date('2014-01-01','2018-01-01')

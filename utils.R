@@ -77,6 +77,8 @@ utils.add.bday <- function(d, days){
 	return(all.trading.dates[tgtidx])
 }
 
+utils.list.files <- memoise(function(...) list.files(...))
+
 utils.read <- function(filepath, startDate = NA, endDate = NA){
 	path = paste('./', dirname(filepath), sep='')
 	filename = basename(filepath)
