@@ -4,7 +4,7 @@ gen.universe <- function(market.data, company.data, lookback = 5, startDate = "2
 	all.dates = all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))]
 	industry.secs = company.data[, unique(Ticker)]
 	lapply(as.character(all.dates), function(d){
-		mkt.secs = unique(unlist(lapply(0:(lookback-1), function(lb) market.data[Date == utils.add.bday(d, -lb), unique(Ticker)])))
+		mkt.secs = market.data[Date %in% unlist(lapply(0:(lookback-1), function(lb) as.character(utils.add.bday(d, -lb)))), unique(Ticker)]
 		secs.missing.inudstry = setdiff(mkt.secs, industry.secs)
 		flog.info(paste("gen universe on", d, "with", length(mkt.secs), "in mktData and", length(industry.secs), "from industry classification"))
 		if(length(secs.missing.inudstry) > 0) flog.warn(paste("Missing industry classification:", paste(secs.missing.inudstry), "in universe"))

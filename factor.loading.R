@@ -59,7 +59,7 @@ gen.mktbeta.loading(market.data[Date < "2018-01-01"][Date >= "2013-12-01"], indi
 
 gen.value.loading <- function(financial.data, halflife = 63, lookback = 504, trim.pct = 0.02, startDate = "2004-02-01", endDate = "2018-01-01"){
 	book.vals = financial.data[!is.na(Common.Equity), .(Ticker, Date=Fiscal.Period.End.Date, Common.Equity)]
-	all.dates = all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))]
+	all.dates = utils.get.bday.range(startDate, endDate)
 	rbindlist( lapply( as.character(all.dates), function(d){
 		book.vals.cur = book.vals[Date < d][utils.add.bday(d, -lookback) <= Date]
 		cur.lookback.dates = book.vals.cur[, sort(unique(Date))]
@@ -93,8 +93,8 @@ gen.revenue.wgts.unclassified.tickers <- function(){
 	)
 	seb.revenues = data.table(year = 2017:2004, Ticker = "SEB",
 							  AGRICULTURAL.PRODUCTION.CROPS=c(0.82,0.81,0.81,0.84,0.82,0.8,0.82,0.78,0.76,0.74,0.71,0.69,0.73,0.79),
-							  WATER.TRANSPORTATION=c(0.91,0.92,0.91,0.82,0.76,0.79,0.89,0.87,0.87,0.87,0.88,0.88,0.89,0.9),
-							  ELECTRIC.GAS.AND.SANITARY.SERVICES=c(0.06,0.05,0.07,0.1,0.14,0.13,0.06,0.08,0.09,0.11,0.1,0.09,0.07,0.06)
+							  WATER.TRANSPORTATION=c(0.17,0.17,0.17,0.13,0.14,0.16,0.16,0.2,0.21,0.22,0.26,0.27,0.24,0.19),
+							  ELECTRIC.GAS.AND.SANITARY.SERVICES=c(0.02,0.01,0.02,0.03,0.04,0.04,0.02,0.03,0.03,0.03,0.03,0.04,0.03,0.02)
 	)
 	brk.revenues = data.table(year = 2017:2004, Ticker = "BRK/B",
 							  INSURANCE.CARRIERS=c(0.25,0.21,0.2,0.21,0.2,0.21,0.22,0.23,0.25,0.24,0.27,0.24,0.27,0.28),
@@ -111,7 +111,7 @@ gen.industry.loading <- function(company.data, startDate = "2004-01-01", endDate
 	classified.companies = company.data[Sector != "NONCLASSIFIABLE",.(Ticker, Industry, Wgt=1)]
 	industry.model = dcast(classified.companies, Ticker~Industry, fun.aggregate = sum, value.var = "Wgt")
 	nonclassified.wgts = gen.revenue.wgts.unclassified.tickers()
-	lapply( all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))], function(d){
+	lapply( utils.get.bday.range(startDate, endDate), function(d){
 		nonclassified.cur = nonclassified.wgts[year == substr(d, 1, 4)]
 		curres = rbindlist(list(industry.model, nonclassified.cur), use.names = T, fill = T)
 		curres[is.na(curres)] = 0

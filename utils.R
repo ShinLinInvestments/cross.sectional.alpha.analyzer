@@ -61,6 +61,10 @@ utils.diff.bday <- function(d1, d2){
 	return(length(all.trading.dates[(all.trading.dates >= d1) & (all.trading.dates < d2)]))
 }
 
+utils.get.bday.range <- function(startDate, endDate){
+	as.character(all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))])
+}
+
 utils.add.bday <- function(d, days){
 	if(days == 0) return(d)
 	if(length(d) > 1){
@@ -101,6 +105,7 @@ utils.winsorize <- function(vec, lowerBound = -Inf, upperBound = Inf, use.pct = 
 
 sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
+medianNA <- function(...) median(..., na.rm = TRUE)
 sdNA <- function(...) sd(..., na.rm = TRUE)
 
 # Logger setting
