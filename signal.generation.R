@@ -19,7 +19,7 @@ gen.forward.return <- function(startDate = "2004-02-02", endDate = "2017-09-29")
 
 gen.forward.return(startDate = '2014-01-01')
 
-gen.signal.fundamentals <- function(financial.data, startDate, endDate, lookback = 504){
+gen.signal.fundamentals <- function(financial.data, startDate, endDate, lookback = 504, halflife = 21){
 	financial.data[, qtr := quarter(Fiscal.Period.End.Date)]
 	financial.data[, Gross.Profit := Quarterly.Sales - Cost.of.Goods.Sold][, EBITDA := Gross.Profit - Selling.General.and.Administrative]
 	ticker.date.colnames = c('Ticker','qtr','Fiscal.Period.End.Date')
@@ -27,16 +27,18 @@ gen.signal.fundamentals <- function(financial.data, startDate, endDate, lookback
 	# Padding metrics from last qtr and the same qtr last year
 	fin0 = utils.diff.metric(financial.data, metric.names, 'Ticker', 'Fiscal.Period.End.Date')
 	all.dates = utils.get.bday.range(startDate, endDate)
-	lapply(all.dates, function(d){
+	rbindlist(lapply(all.dates, function(d){
 		fin1 = fin0[Fiscal.Period.End.Date < d][Fiscal.Period.End.Date >= utils.add.bday(d, -lookback)]
 		lookback.dates = fin1[, sort(unique(Fiscal.Period.End.Date))]
 		fin1 = utils.merge(fin1, data.table(Fiscal.Period.End.Date = lookback.dates, date.diff = utils.diff.bday(lookback.dates, d)))
 		fin1[, ewma := 0.5 ^ (date.diff / halflife)]
-		secs = fin1[, unique(Ticker)]
-		res = rbindlist(lapply(secs, function(s){
-			fin1 = Reduce(utils.merge.all, lapply(metric.names, utils.diff.metric, metric.dt = fin0[Ticker == s], col.date = 'Fiscal.Period.End.Date'))
-			data.table(Ticker = s, fin1)
-		}))
-	})
+		flog.info(paste("gen signal for", d))
+		fin1.cur = fin1[order(-Fiscal.Period.End.Date)][,.SD[1, .(ocf2a=Operating.Cash.Flow/Assets, accru2a=(Net.Income-Operating.Cash.Flow)/Assets)], by=Ticker]
+		fin1.smo = fin1[, .(ebitda.d1y.2a = sumNA(ewma * (EBITDA-EBITDA.1y)/Assets)), by=Ticker]
+		data.table(Date = d, utils.merge.all(fin1.cur, fin1.smo))
+	}))
 }
+
+sigs = gen.signal.fundamentals(financial.data, '2014-01-01', '2015-01-01')
+
 
