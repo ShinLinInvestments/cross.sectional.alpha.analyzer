@@ -99,8 +99,8 @@ utils.merge.all <- function(dt1, dt2, ...) utils.merge(dt1, dt2, all=T)
 
 utils.winsorize <- function(vec, lowerBound = -Inf, upperBound = Inf, use.pct = TRUE){
 	if(use.pct){
-		lowerBound = quantile(vec, max(lowerBound, 0))
-		upperBound = quantile(vec, min(upperBound, 1))
+		lowerBound = quantile(vec, max(lowerBound, 0), na.rm = T)
+		upperBound = quantile(vec, min(upperBound, 1), na.rm = T)
 	}
 	pmin(upperBound, pmax(lowerBound, vec))
 }
@@ -119,6 +119,7 @@ sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
 medianNA <- function(...) median(..., na.rm = TRUE)
 sdNA <- function(...) sd(..., na.rm = TRUE)
+corNA <- function(...) cor(..., use = 'complete')
 
 # Logger setting
 flog.layout(layout.format('~t|~l|~n|~f|~m'))

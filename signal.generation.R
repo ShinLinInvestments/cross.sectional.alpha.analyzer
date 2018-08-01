@@ -28,7 +28,7 @@ gen.signal.fundamentals <- function(financial.data, startDate, endDate, lookback
 	fin0 = utils.diff.metric(financial.data, metric.names, 'Ticker', 'Fiscal.Period.End.Date')
 	all.dates = utils.get.bday.range(startDate, endDate)
 	lapply(all.dates, function(d){
-		fin1 = fin0[Fiscal.Period.End.Date <= d][Fiscal.Period.End.Date >= utils.add.bday(d, -lookback)]
+		fin1 = fin0[Fiscal.Period.End.Date < d][Fiscal.Period.End.Date >= utils.add.bday(d, -lookback)]
 		lookback.dates = fin1[, sort(unique(Fiscal.Period.End.Date))]
 		fin1 = utils.merge(fin1, data.table(Fiscal.Period.End.Date = lookback.dates, date.diff = utils.diff.bday(lookback.dates, d)))
 		fin1[, ewma := 0.5 ^ (date.diff / halflife)]
