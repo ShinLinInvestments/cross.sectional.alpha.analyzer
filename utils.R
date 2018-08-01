@@ -105,6 +105,16 @@ utils.winsorize <- function(vec, lowerBound = -Inf, upperBound = Inf, use.pct = 
 	pmin(upperBound, pmax(lowerBound, vec))
 }
 
+utils.diff.metric <- function(m.dt, metric.names, col.ticker, col.date){
+	m.dt[, qtr := quarter(get(col.date))]
+	m.dt = m.dt[order(get(col.ticker), get(col.date))]
+	cmd.1q = paste('m.dt[, `:=`(', paste(metric.names, '.1q = c(NA, ', metric.names, "[-length(", metric.names, ")])", sep = '', collapse = ', '), '), by=', col.ticker, ']')
+	eval(parse(text = print(cmd.1q)))
+	cmd.1y = paste("m.dt[, `:=`(", paste(metric.names, ".1y = c(NA, ", metric.names, "[-length(", metric.names, ")])", sep='', collapse=', '), "), by=.(", col.ticker, ", qtr)]")
+	eval(parse(text = print(cmd.1y)))
+	m.dt
+}
+
 sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
 medianNA <- function(...) median(..., na.rm = TRUE)

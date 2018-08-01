@@ -128,13 +128,16 @@ gen.factor.covariance.matrix.on.date <- function(startDate, endDate, lookback = 
 	frets = utils.read("risk.model/factor.return/factor.return.", utils.add.bday(startDate, -lookback), endDate)
 	lapply(utils.get.bday.range(startDate, endDate), function(d){
 		dates.lb = utils.get.bday.range(utils.add.bday(d, -lookback), d)
-		frets.cur = utils.merge(frets[(Date >= min(dates.lb)) & (Date <= max(dates.lb)),], data.table(Date=dates.lb, date.diff=utils.diff.bday(dates.lb, d)), all.y=T)
+		frets.cur = frets[(Date >= min(dates.lb)) & (Date <= max(dates.lb)),]
+		check.missing.fret = frets.cur[,.N, by=Date]
+		utils.checkCond(all(check.missing.fret[, min(N) == max(N)]), paste("Expexted number of factors:", check.missing.fret[,max(N)], "Actual:", paste(check.missing.fret[N < max(N), paste(Date, ":", N, sep='')], collapse=', ')))
+		frets.cur = utils.merge(frets.cur, data.table(Date=dates.lb, date.diff=utils.diff.bday(dates.lb, d)))
 		frets.cur[, ewma := 0.5 ^ (date.diff / halflife)][, fret.ewma := fret * ewma]
 		cov.raw = cov(dcast(frets.cur, Date ~ Factor, value.var = 'fret.ewma')[,-'Date',with=F])
 		# Shrink cov matrix toward diagonal
 		cov.prior = diag(diag(cov.raw))
 		cov.res = cov.raw * shrink.wgt + cov.prior * (1 - shrink.wgt)
-		det.cov.res = det(cov.res)
+		det.cov.res = det(cov.res * (1/median(cov.res)))
 		flog.info(paste("Cov matrix of", d, "with det =", det.cov.res))
 		utils.checkCond(!is.na(det.cov.res) & det.cov.res != 0, paste("Cov matrix of", d, "is singular!"))
 		# Output
@@ -142,6 +145,7 @@ gen.factor.covariance.matrix.on.date <- function(startDate, endDate, lookback = 
 	})
 }
 
-gen.factor.covariance.matrix.on.date('2014-01-01','2014-02-01')
-gen.factor.covariance.matrix.on.date('2010-01-01','2014-01-01')
 gen.factor.covariance.matrix.on.date('2014-01-01','2018-01-01')
+gen.factor.covariance.matrix.on.date('2010-01-01','2014-01-01')
+gen.factor.covariance.matrix.on.date('2006-01-01','2010-01-01')
+gen.factor.covariance.matrix.on.date('2004-07-01','2006-01-01')
