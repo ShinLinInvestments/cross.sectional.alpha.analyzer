@@ -126,6 +126,7 @@ utils.diff.metric <- function(m.dt, metric.names, col.ticker, col.date){
 	m.dt
 }
 
+
 sumNA <- function(...) sum(..., na.rm = TRUE)
 meanNA <- function(...) mean(..., na.rm = TRUE)
 medianNA <- function(...) median(..., na.rm = TRUE)

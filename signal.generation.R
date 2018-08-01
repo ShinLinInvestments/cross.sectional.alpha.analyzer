@@ -37,13 +37,23 @@ gen.signal.fundamentals <- function(financial.data, startDate, endDate, lookback
 		fin1 = utils.merge(fin1, data.table(Fiscal.Period.End.Date = lookback.dates, date.diff = utils.diff.bday(lookback.dates, d)))
 		fin1[, ewma := 0.5 ^ (date.diff / halflife)]
 		flog.info(paste("gen signal for", d))
-		fin1.cur = fin1[order(-Fiscal.Period.End.Date)][,.SD[1, .(ocf2a=Operating.Cash.Flow/Assets, accru2a=(Net.Income-Operating.Cash.Flow)/Assets)], by=Ticker]
-		fin1.smo = fin1[, .(ebitda.d1y.2a = sumNA(ewma * (EBITDA-EBITDA.1y)/Assets)), by=Ticker]
+		fin1.cur = fin1[order(-Fiscal.Period.End.Date)][,.SD[1, .(
+			gross.margin = Gross.Profit/Quarterly.Sales,
+			ebitda2s = EBITDA/Quarterly.Sales,
+			ocf2a=Operating.Cash.Flow/Assets,
+			accru2a=(Net.Income-Operating.Cash.Flow)/Assets,
+			earn.power = EBITDA/Assets,
+			asset.to = Quarterly.Sales/Assets
+			)], by=Ticker]
+		fin1.smo = fin1[, .(
+			ebitda.d1y.2a = sumNA(ewma * (EBITDA-EBITDA.1y)/Assets),
+			ocf.d1y.2a = sumNA(ewma * (Operating.Cash.Flow-Operating.Cash.Flow.1y)/Assets)
+			), by=Ticker]
 		data.table(Date = d, utils.merge.all(fin1.cur, fin1.smo))
 	}))
 }
 
 financial.data = expand.financial.data(financial.data)
-sigs = gen.signal.fundamentals(financial.data, '2014-01-01', '2015-01-01')
+sigs = gen.signal.fundamentals(financial.data, '2006-01-01', '2017-01-01')
 
 
