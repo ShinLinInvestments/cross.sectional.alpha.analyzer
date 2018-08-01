@@ -65,6 +65,17 @@ utils.get.bday.range <- function(startDate, endDate){
 	as.character(all.trading.dates[which((all.trading.dates >= startDate) & (all.trading.dates <= endDate))])
 }
 
+utils.get.sample.bday.range <- function(startDate, endDate, name = 'IS'){
+	all.dates = data.table(Date = utils.get.bday.range(startDate, endDate))
+	if(name == 'IS'){ # In-Sample: Even year even quarter, odd year odd quarter
+		res = all.dates[(quarter(Date) %% 2) == (year(Date) %% 2), Date]
+	} else if(name == 'OS'){ # Out of Sample
+		res = all.dates[(quarter(Date) %% 2) == (year(Date) %% 2), Date]
+	} else if(name == 'FS'){
+		res = all.dates[, Date]
+	}
+}
+
 utils.add.bday <- function(d, days){
 	if(days == 0) return(d)
 	if(length(d) > 1){
